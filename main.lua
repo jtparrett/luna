@@ -10,6 +10,10 @@ if true then
     text = 'http://luna.jtparrett.co.uk/test'
   }
 
+  function luna.setError(err)
+    luna.error = err
+  end
+
   function luna.runResponse(type)
     if response[type] then
       response[type]()
@@ -40,13 +44,23 @@ if true then
    
   function luna.submit()
     local data = {}
-    http.request({ 
+    local b, status = http.request({ 
       url = addressBar.text,
       sink = ltn12.sink.table(data)
     })
 
-    _lunaLoadString(table.concat(data))
-    luna.populateResponse()
+    if status == 200 then
+      _lunaLoadString(table.concat(data), {
+        success = function()
+          luna.populateResponse()
+          luna.setError(false)
+        end,
+        error = luna.setError
+      })
+    else
+      luna.setError(status)
+    end
+
     luna.reset()
   end
 
@@ -81,13 +95,22 @@ if true then
 
   function luna.draw()
     love.graphics.setColor(0, 0, 0, 255)
-    luna.runResponse('draw')
+    if luna.error then
+      love.graphics.print(luna.error, 5, 40)
+    else
+      luna.runResponse('draw')
+    end
     suit.draw()
   end
 
   luna.reset()
 end
 
-function _lunaLoadString(data)
-  loadstring(data)()
+function _lunaLoadString(data, methods)
+  local status, err = pcall(loadstring(data))
+  if err then
+    methods.error(err)
+  else
+    methods.success(status)
+  end
 end
