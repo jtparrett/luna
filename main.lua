@@ -3,41 +3,42 @@ local http = require('socket.http')
 local ltn12 = require('ltn12')
 local suit = require('suit')
 
-function _StaticLunaThunk()
+if true then
+  local luna = {}
   local response = {}
   local addressBar = {
     text = 'http://luna.jtparrett.co.uk/test'
   }
 
-  function runResponse(type)
+  function luna.runResponse(type)
     if response[type] then
       response[type]()
     end
   end
 
-  function updateResponse(type, thunk)
+  function luna.updateResponse(type, thunk)
     if love[type] ~= thunk then
       response[type] = love[type]
     end    
   end
 
-  function populateResponse()
-    updateResponse('update', update)
-    updateResponse('draw', draw)
-    updateResponse('textinput', textinput)
-    updateResponse('keypressed', keypressed)
+  function luna.populateResponse()
+    luna.updateResponse('update', luna.update)
+    luna.updateResponse('draw', luna.draw)
+    luna.updateResponse('textinput', luna.textinput)
+    luna.updateResponse('keypressed', luna.keypressed)
   end
 
-  function reset()
+  function luna.reset()
     -- Public LOVE Api's
-    love.load = load
-    love.update = update
-    love.textinput = textinput
-    love.keypressed = keypressed
-    love.draw = draw
+    love.load = luna.load
+    love.update = luna.update
+    love.textinput = luna.textinput
+    love.keypressed = luna.keypressed
+    love.draw = luna.draw
   end
    
-  function submit()
+  function luna.submit()
     local data = {}
     http.request({ 
       url = addressBar.text,
@@ -45,11 +46,11 @@ function _StaticLunaThunk()
     })
 
     loadstring(table.concat(data))()
-    populateResponse()
-    reset()
+    luna.populateResponse()
+    luna.reset()
   end
 
-  function load()
+  function luna.load()
     love.graphics.setBackgroundColor(255, 255, 255, 255)
     love.keyboard.setKeyRepeat(true)
     love.window.setMode(1000, 1000, {
@@ -57,34 +58,32 @@ function _StaticLunaThunk()
     })
   end
 
-  function update()
+  function luna.update()
     local width, height = love.window.getMode()
     suit.layout:reset(5, 5)
     suit.Input(addressBar, suit.layout:row(width - 10, 30))
-    runResponse('update')
+    luna.runResponse('update')
   end
    
-  function textinput(t)
+  function luna.textinput(t)
     suit.textinput(t)
-    runResponse('textinput')
+    luna.runResponse('textinput')
   end
 
-  function keypressed(key)
+  function luna.keypressed(key)
     suit.keypressed(key)
-    runResponse('keypressed')
+    luna.runResponse('keypressed')
 
     if key == 'return' then
-      submit()
+      luna.submit()
     end
   end
 
-  function draw()
+  function luna.draw()
     love.graphics.setColor(0, 0, 0, 255)
-    runResponse('draw')
+    luna.runResponse('draw')
     suit.draw()
   end
 
-  return { init = reset }
+  luna.reset()
 end
-
-_StaticLunaThunk().init()
