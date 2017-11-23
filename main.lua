@@ -16,17 +16,17 @@ if true then
     end
   end
 
-  function luna.updateResponse(type, thunk)
-    if love[type] ~= thunk then
+  function luna.updateResponse(type)
+    if love[type] ~= luna[type] then
       response[type] = love[type]
     end    
   end
 
   function luna.populateResponse()
-    luna.updateResponse('update', luna.update)
-    luna.updateResponse('draw', luna.draw)
-    luna.updateResponse('textinput', luna.textinput)
-    luna.updateResponse('keypressed', luna.keypressed)
+    luna.updateResponse('update')
+    luna.updateResponse('draw')
+    luna.updateResponse('textinput')
+    luna.updateResponse('keypressed')
   end
 
   function luna.reset()
@@ -45,7 +45,7 @@ if true then
       sink = ltn12.sink.table(data)
     })
 
-    loadstring(table.concat(data))()
+    _lunaLoadString(table.concat(data))
     luna.populateResponse()
     luna.reset()
   end
@@ -86,4 +86,8 @@ if true then
   end
 
   luna.reset()
+end
+
+function _lunaLoadString(data)
+  loadstring(data)()
 end
