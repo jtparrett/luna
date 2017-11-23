@@ -14,9 +14,9 @@ if true then
     luna.error = err
   end
 
-  function luna.runResponse(type)
+  function luna.runResponse(type, props)
     if response[type] then
-      response[type]()
+      response[type](props)
     end
   end
 
@@ -27,6 +27,7 @@ if true then
   end
 
   function luna.populateResponse()
+    luna.updateResponse('load')
     luna.updateResponse('update')
     luna.updateResponse('draw')
     luna.updateResponse('textinput')
@@ -53,6 +54,7 @@ if true then
       _lunaLoadString(table.concat(data), {
         success = function()
           luna.populateResponse()
+          luna.runResponse('load')
           luna.setError(false)
         end,
         error = luna.setError
@@ -72,11 +74,11 @@ if true then
     })
   end
 
-  function luna.update()
+  function luna.update(dt)
     local width, height = love.window.getMode()
     suit.layout:reset(5, 5)
     suit.Input(addressBar, suit.layout:row(width - 10, 30))
-    luna.runResponse('update')
+    luna.runResponse('update', dt)
   end
    
   function luna.textinput(t)
