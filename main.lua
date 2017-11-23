@@ -1,77 +1,90 @@
 local utf8 = require('utf8')
 local http = require('socket.http')
 local ltn12 = require('ltn12')
+local suit = require('suit')
 
-function load()
-  url = 'http://luna.jtparrett.co.uk/test'
+function _StaticLunaThunk()
+  local response = {}
+  local addressBar = {
+    text = 'http://luna.jtparrett.co.uk/test'
+  }
 
-  local width, height = love.window.getMode()
-  love.keyboard.setKeyRepeat(true)
-  love.graphics.setBackgroundColor(255, 255, 255, 255)
-  love.window.setMode(width, height, {
-    resizable = true
-  })
-end
- 
-function textinput(t)
-  if loadTextinput then
-    loadTextinput()
-  end
-
-  url = url .. t
-end
- 
-function keypressed(key)
-  if loadKeypressed then
-    loadKeypressed(key)
-  end
-
-  if key == 'backspace' then
-    local byteoffset = utf8.offset(url, -1)
-    if byteoffset then
-      url = string.sub(url, 1, byteoffset - 1)
+  function runResponse(type)
+    if response[type] then
+      response[type]()
     end
   end
 
-  if key == 'return' then
-    local response = {}
-    http.request{ 
-      url = url,
-      sink = ltn12.sink.table(response)
-    }
+  function updateResponse(type, thunk)
+    if love[type] ~= thunk then
+      response[type] = love[type]
+    end    
+  end
 
-    loadstring(table.concat(response))()
-    if love.textinput ~= textinput then
-      loadTextinput = love.textinput
-    end
-    if love.keypressed ~= keypressed then
-      loadKeypressed = love.keypressed
-    end
-    if love.draw ~= draw then
-      loadDraw = love.draw
-    end
+  function populateResponse()
+    updateResponse('update', update)
+    updateResponse('draw', draw)
+    updateResponse('textinput', textinput)
+    updateResponse('keypressed', keypressed)
+  end
+
+  function reset()
+    -- Public LOVE Api's
+    love.load = load
+    love.update = update
+    love.textinput = textinput
+    love.keypressed = keypressed
+    love.draw = draw
+  end
+   
+  function submit()
+    local data = {}
+    http.request({ 
+      url = addressBar.text,
+      sink = ltn12.sink.table(data)
+    })
+
+    loadstring(table.concat(data))()
+    populateResponse()
     reset()
   end
-end
 
-function draw()
-  love.graphics.setColor(0, 0, 0, 255)
-  if loadDraw then
-    loadDraw()
+  function load()
+    love.graphics.setBackgroundColor(255, 255, 255, 255)
+    love.keyboard.setKeyRepeat(true)
+    love.window.setMode(1000, 1000, {
+      resizable = true
+    })
   end
 
-  local width = love.graphics.getWidth()
-  love.graphics.setColor(0, 0, 0, 100)
-  love.graphics.rectangle('fill', 0, 0, width, 20)
-  love.graphics.setColor(255, 255, 255, 255)
-  love.graphics.print(url, 10, 3)
+  function update()
+    local width, height = love.window.getMode()
+    suit.layout:reset(5, 5)
+    suit.Input(addressBar, suit.layout:row(width - 10, 30))
+    runResponse('update')
+  end
+   
+  function textinput(t)
+    suit.textinput(t)
+    runResponse('textinput')
+  end
+
+  function keypressed(key)
+    suit.keypressed(key)
+    runResponse('keypressed')
+
+    if key == 'return' then
+      submit()
+    end
+  end
+
+  function draw()
+    love.graphics.setColor(0, 0, 0, 255)
+    runResponse('draw')
+    suit.draw()
+  end
+
+  return { init = reset }
 end
 
-function reset()
-  love.load = load
-  love.textinput = textinput
-  love.keypressed = keypressed
-  love.draw = draw
-end
-
-reset()
+_StaticLunaThunk().init()
