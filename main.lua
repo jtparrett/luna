@@ -100,10 +100,11 @@ if true then
     else
       luna.runResponse('draw')
     end
+
+    love.graphics.reset()
     suit.draw()
   end
 
-  love.graphics.reset()
   luna.reset()
 end
 
