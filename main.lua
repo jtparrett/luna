@@ -67,7 +67,6 @@ if true then
   end
 
   function luna.load()
-    love.graphics.setBackgroundColor(255, 255, 255, 255)
     love.keyboard.setKeyRepeat(true)
     love.window.setMode(1000, 1000, {
       resizable = true
@@ -96,7 +95,6 @@ if true then
   end
 
   function luna.draw()
-    love.graphics.setColor(0, 0, 0, 255)
     if luna.error then
       love.graphics.print(luna.error, 5, 40)
     else
@@ -105,6 +103,7 @@ if true then
     suit.draw()
   end
 
+  love.graphics.reset()
   luna.reset()
 end
 
