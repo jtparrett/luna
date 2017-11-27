@@ -43,15 +43,10 @@ if true then
     love.draw = luna.draw
   end
    
-  function luna.submit()
-    local data = {}
-    local b, status = http.request({ 
-      url = addressBar.text,
-      sink = ltn12.sink.table(data)
-    })
-
+  function luna.makeRequest()
+    local data, status = http.request(addressBar.text)
     if status == 200 then
-      _lunaLoadString(table.concat(data), {
+      _lunaLoadString(data, {
         success = function()
           luna.populateResponse()
           luna.runResponse('load')
@@ -76,21 +71,24 @@ if true then
   function luna.update(dt)
     local width, height = love.window.getMode()
     suit.layout:reset(5, 5)
-    suit.Input(addressBar, suit.layout:row(width - 10, 30))
+    local input = suit.Input(addressBar, suit.layout:row(width - 10, 30))
+    if input.submitted then
+      luna.makeRequest()
+    end
     luna.runResponse('update', dt)
   end
    
   function luna.textinput(t)
     suit.textinput(t)
-    luna.runResponse('textinput')
+    luna.runResponse('textinput', t)
   end
 
   function luna.keypressed(key)
     suit.keypressed(key)
-    luna.runResponse('keypressed')
+    luna.runResponse('keypressed', key)
 
-    if key == 'return' then
-      luna.submit()
+    if love.keyboard.isDown('lgui') and love.keyboard.isDown('r') then
+      luna.makeRequest()
     end
   end
 
