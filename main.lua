@@ -75,15 +75,16 @@ if true then
 
   function luna.update(dt)
     local width, height = love.window.getMode()
-    suit.layout:reset(5, 5)
+    suit.layout:reset(0, 5)
     suit.layout:padding(5, 0)
-
-    if suit.Button('+', suit.layout:row(35, 30)).hit then
-      luna.newTab()
-    end
+    suit.layout:row(0, 30)
 
     for key,value in pairs(tabs) do
       suit.Button('Tab ' .. key, suit.layout:col(100))
+    end
+
+    if suit.Button('+', suit.layout:col(35)).hit then
+      luna.newTab()
     end
 
     suit.layout:reset(5, 40)
