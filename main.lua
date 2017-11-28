@@ -81,6 +81,13 @@ if true then
     activeTab = table.getn(tabs)
   end
 
+  function luna.closeTab(i)
+    if i > 1 then
+      activeTab = i - 1
+      table.remove(tabs, i)
+    end
+  end
+
   function luna.update(dt)
     local width, height = love.window.getMode()
     suit.layout:reset(0, 5)
@@ -120,12 +127,18 @@ if true then
     suit.keypressed(key)
     luna.runResponse('keypressed', key)
 
-    if love.keyboard.isDown('lgui') and love.keyboard.isDown('r') then
-      luna.makeRequest()
+    function keyDown(id)
+      return love.keyboard.isDown(id)
     end
 
-    if love.keyboard.isDown('lgui') and love.keyboard.isDown('t') then
+    if keyDown('lgui') and keyDown('r') then
+      luna.makeRequest()
+    end
+    if keyDown('lgui') and keyDown('t') then
       luna.newTab()
+    end
+    if keyDown('lgui') and keyDown('w') then
+      luna.closeTab(activeTab)
     end
   end
 
