@@ -19,7 +19,9 @@ if true then
   end
 
   function luna.setActiveTab(i)
-    activeTab = i
+    if tabs[i] then
+      activeTab = i
+    end
   end
 
   function luna.runResponse(type, props)
@@ -144,6 +146,9 @@ if true then
     end
     if keyDown('lgui') and keyDown('w') then
       luna.closeTab(activeTab)
+    end
+    if keyDown('lgui') and love.keyboard.isDown(1, 2, 3, 4, 5, 6, 7, 8, 9) then
+      luna.setActiveTab(tonumber(key))
     end
   end
 
