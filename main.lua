@@ -71,8 +71,18 @@ if true then
   function luna.update(dt)
     local width, height = love.window.getMode()
     suit.layout:reset(5, 5)
-    local input = suit.Input(addressBar, suit.layout:row(width - 10, 30))
-    if input.submitted then
+    suit.layout:padding(5, 0)
+
+    suit.Button('Tab 1', suit.layout:row(100, 30))
+    suit.Button('+', suit.layout:col(35))
+
+    suit.layout:reset(5, 40)
+    suit.layout:padding(5, 0)
+
+    suit.Button('<', suit.layout:row(35, 30))
+    suit.Button('>', suit.layout:col(35))
+
+    if suit.Input(addressBar, suit.layout:col(width - 90)).submitted then
       luna.makeRequest()
     end
     luna.runResponse('update', dt)
