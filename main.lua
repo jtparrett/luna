@@ -5,6 +5,7 @@ local suit = require('suit')
 
 if true then
   local luna = {}
+  local tabs = {'1'}
   local response = {}
   local addressBar = {
     text = 'http://luna.jtparrett.co.uk/test'
@@ -68,13 +69,22 @@ if true then
     })
   end
 
+  function luna.newTab()
+    table.insert(tabs, '1')
+  end
+
   function luna.update(dt)
     local width, height = love.window.getMode()
     suit.layout:reset(5, 5)
     suit.layout:padding(5, 0)
 
-    suit.Button('Tab 1', suit.layout:row(100, 30))
-    suit.Button('+', suit.layout:col(35))
+    if suit.Button('+', suit.layout:row(35, 30)).hit then
+      luna.newTab()
+    end
+
+    for key,value in pairs(tabs) do
+      suit.Button('Tab ' .. key, suit.layout:col(100))
+    end
 
     suit.layout:reset(5, 40)
     suit.layout:padding(5, 0)
