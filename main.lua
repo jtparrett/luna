@@ -18,6 +18,10 @@ if true then
     tabs[activeTab].error = err
   end
 
+  function luna.setActiveTab(i)
+    activeTab = i
+  end
+
   function luna.runResponse(type, props)
     if tabs[activeTab][type] then
       tabs[activeTab][type](props)
@@ -78,12 +82,13 @@ if true then
         text = ''
       }
     })
-    activeTab = table.getn(tabs)
+
+    luna.setActiveTab(table.getn(tabs))
   end
 
   function luna.closeTab(i)
     if i > 1 then
-      activeTab = i - 1
+      luna.setActiveTab(i - 1)
       table.remove(tabs, i)
     end
   end
@@ -98,7 +103,7 @@ if true then
 
     for key,value in pairs(tabs) do
       if suit.Button('Tab ' .. key, suit.layout:col(tabWidth - 5)).hit then
-        activeTab = key
+        luna.setActiveTab(key)
       end
     end
 
