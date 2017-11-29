@@ -5,24 +5,34 @@ local suit = require('suit')
 
 if true then
   local luna = {}
-  local response = {}
-  local addressBar = {
-    text = 'http://luna.jtparrett.co.uk/test'
+  local activeTab = 1
+  local tabs = {
+    {
+      address = {
+        text = 'http://luna.jtparrett.co.uk/test'
+      }
+    }
   }
 
   function luna.setError(err)
-    luna.error = err
+    tabs[activeTab].error = err
+  end
+
+  function luna.setActiveTab(i)
+    if tabs[i] then
+      activeTab = i
+    end
   end
 
   function luna.runResponse(type, props)
-    if response[type] then
-      response[type](props)
+    if tabs[activeTab][type] then
+      tabs[activeTab][type](props)
     end
   end
 
   function luna.updateResponse(type)
     if love[type] ~= luna[type] then
-      response[type] = love[type]
+      tabs[activeTab][type] = love[type]
     end    
   end
 
@@ -44,7 +54,7 @@ if true then
   end
    
   function luna.makeRequest()
-    local data, status = http.request(addressBar.text)
+    local data, status = http.request(tabs[activeTab].address.text)
     if status == 200 then
       _lunaLoadString(data, {
         success = function()
@@ -68,11 +78,48 @@ if true then
     })
   end
 
+  function luna.newTab()
+    table.insert(tabs, {
+      address = {
+        text = ''
+      }
+    })
+
+    luna.setActiveTab(table.getn(tabs))
+  end
+
+  function luna.closeTab(i)
+    if i > 1 then
+      luna.setActiveTab(i - 1)
+      table.remove(tabs, i)
+    end
+  end
+
   function luna.update(dt)
     local width, height = love.window.getMode()
-    suit.layout:reset(5, 5)
-    local input = suit.Input(addressBar, suit.layout:row(width - 10, 30))
-    if input.submitted then
+    suit.layout:reset(0, 5)
+    suit.layout:padding(5, 0)
+    suit.layout:row(0, 30)
+
+    local tabWidth = math.min(100, (width - 45) / table.getn(tabs))
+
+    for key,value in pairs(tabs) do
+      if suit.Button('Tab ' .. key, suit.layout:col(tabWidth - 5)).hit then
+        luna.setActiveTab(key)
+      end
+    end
+
+    if suit.Button('+', suit.layout:col(35)).hit then
+      luna.newTab()
+    end
+
+    suit.layout:reset(5, 40)
+    suit.layout:padding(5, 0)
+
+    suit.Button('<', suit.layout:row(35, 30))
+    suit.Button('>', suit.layout:col(35))
+
+    if suit.Input(tabs[activeTab].address, suit.layout:col(width - 90)).submitted then
       luna.makeRequest()
     end
     luna.runResponse('update', dt)
@@ -87,14 +134,27 @@ if true then
     suit.keypressed(key)
     luna.runResponse('keypressed', key)
 
-    if love.keyboard.isDown('lgui') and love.keyboard.isDown('r') then
+    function keyDown(id)
+      return love.keyboard.isDown(id)
+    end
+
+    if keyDown('lgui') and keyDown('r') then
       luna.makeRequest()
+    end
+    if keyDown('lgui') and keyDown('t') then
+      luna.newTab()
+    end
+    if keyDown('lgui') and keyDown('w') then
+      luna.closeTab(activeTab)
+    end
+    if keyDown('lgui') and love.keyboard.isDown(1, 2, 3, 4, 5, 6, 7, 8, 9) then
+      luna.setActiveTab(tonumber(key))
     end
   end
 
   function luna.draw()
-    if luna.error then
-      love.graphics.print(luna.error, 5, 40)
+    if tabs[activeTab].error then
+      love.graphics.print(tabs[activeTab].error, 5, 80)
     else
       luna.runResponse('draw')
     end
